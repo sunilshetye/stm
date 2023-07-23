@@ -53,9 +53,5 @@
         {{ form.as_p }}
         <button type="submit">Sign Up</button>
     </form>
-    
-    {% if user_already_signed_up %}
-        <a href="{% url 'login' %}" class="login-link">Already signed up? Proceed to login.</a>
-    {% endif %}
 </body>
 </html>

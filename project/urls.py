@@ -18,15 +18,10 @@ from app1 import views
 from django.contrib import admin
 
 urlpatterns = [
-    # ...
-    path('admin/',admin.site.urls),
+    path('admin/', admin.site.urls),
     path('signup/', views.signup, name='signup'),
     path('login/', views.login, name='login'),
     path('teacher/', views.teacher_page, name='teacher_page'),
     path('student/', views.student_page, name='student_page'),
-    path('',views.homepage,name='homepage'),
-    
-
-    # ...
+    path('', views.homepage, name='homepage'),
 ]
-

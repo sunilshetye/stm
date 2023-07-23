@@ -5,7 +5,7 @@ from datetime import datetime
 
 class User(AbstractUser):
     username = models.CharField(max_length=50, unique=True, blank=False, null=False)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, blank=False, null=False)
 
     def __str__(self):
         return f"{self.username}: {self.name}"
