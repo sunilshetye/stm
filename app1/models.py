@@ -11,21 +11,32 @@ class User(AbstractUser):
         return f"{self.username}: {self.name}"
 
 
+class Administrator(User):
+    def __str__(self):
+        return f"administrator: {self.username}: {self.name}"
+
+
 class Student(User):
-    pass
+    def __str__(self):
+        return f"student: {self.username}: {self.name}"
 
 
 class Teacher(User):
-    pass
-
-
-class Admin(User):
-    pass
+    def __str__(self):
+        return f"teacher: {self.username}: {self.name}"
 
 
 class Announcement(models.Model):
-    teacher = Teacher()
-    student = Student()
+    teacher = models.ForeignKey(Teacher, on_delete=models.PROTECT, default=None)
     message = models.TextField()
+    timestamp = models.DateTimeField(default=datetime.now)
+
+    def __str__(self):
+        return f"{self.teacher}: {self.message}"
+
+
+class AnnouncementAcknowledgement(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.PROTECT, default=None)
+    announcement = models.ForeignKey(Announcement, on_delete=models.PROTECT, default=None)
     acknowledgement = models.BooleanField(default=False)
     timestamp = models.DateTimeField(default=datetime.now)

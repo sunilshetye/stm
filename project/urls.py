@@ -19,9 +19,10 @@ from django.contrib import admin
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('signup/', views.signup, name='signup'),
-    path('login/', views.login, name='login'),
-    path('teacher/', views.teacher_page, name='teacher_page'),
+    path('signup/', views.signup_page, name='signup_page'),
+    path('login/', views.login_page, name='login_page'),
+    path('administrator/', views.administrator_page, name='administrator_page'),
     path('student/', views.student_page, name='student_page'),
+    path('teacher/', views.teacher_page, name='teacher_page'),
     path('', views.homepage, name='homepage'),
 ]

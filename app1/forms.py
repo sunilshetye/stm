@@ -1,7 +1,7 @@
 from django import forms
 from django.core.validators import validate_slug
 from django.contrib.auth.forms import AuthenticationForm
-from .models import User, Admin, Student, Teacher
+from .models import User, Administrator, Student, Teacher
 from .models import Announcement
 
 
@@ -13,12 +13,9 @@ class LoginForm(AuthenticationForm):
 class SignUpForm(forms.ModelForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Username'}), max_length=32, validators=[validate_slug])
     name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Name'}), max_length=100)
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Password'}), min_length=3, max_length=32)
-    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Confirm Password'}), min_length=3, max_length=32)
-    role = forms.ChoiceField(choices=[('', 'Select Role'),
-                                      ('admin', 'Admin'),
-                                      ('student', 'Student'),
-                                      ('teacher', 'Teacher')])
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Password'}), min_length=2, max_length=32)
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Confirm Password'}), min_length=2, max_length=32)
+    role = forms.ChoiceField(choices=[('', 'Select Role'), ('administrator', 'Administrator'), ('student', 'Student'), ('teacher', 'Teacher')])
 
     class Meta:
         model = User
@@ -38,9 +35,9 @@ class SignUpForm(forms.ModelForm):
         print('role=', role)
         if commit:
             user.save()
-            if role == 'admin':
-                admin = Admin(user_ptr=user)
-                admin.save_base(raw=True)
+            if role == 'administrator':
+                administrator = Administrator(user_ptr=user)
+                administrator.save_base(raw=True)
             elif role == 'student':
                 student = Student(user_ptr=user)
                 student.save_base(raw=True)
@@ -54,3 +51,14 @@ class AnnouncementForm(forms.ModelForm):
     class Meta:
         model = Announcement
         fields = ['message']
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop("request")
+        super(AnnouncementForm, self).__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        announcement = super().save(commit=False)
+        announcement.teacher = self.request.user.teacher
+        if commit:
+            announcement.save()
+        return announcement
