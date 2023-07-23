@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        h2 {
+            color: #007bff;
+            text-align: center;
+            padding-top: 30px;
+        }
+
+        form {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        form button[type="submit"] {
+            display: block;
+            width: 100%;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Styling for View List button */
+        #viewListBtn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Styling for notifications */
+        #notifications {
+            margin-top: 20px;
+        }
+
+        #notifications p {
+            background-color: #f7f7f7;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        /* Styling for Viewed Messages list */
+        #viewedListContainer {
+            margin-top: 20px;
+        }
+
+        #viewedListContainer h3 {
+            color: #007bff;
+        }
+
+        #viewedList {
+            list-style: none;
+            padding: 0;
+        }
+
+        #viewedList li {
+            background-color: #f7f7f7;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Teacher Page</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Post Announcement</button>
+    </form>
+
+    <!-- View List button -->
+    <button id="viewListBtn" onclick="showViewedList()">View List</button>
+
+    <!-- Display notifications here -->
+    <div id="notifications"></div>
+
+    <!-- Viewed messages list -->
+    <div id="viewedListContainer" style="display: none;">
+        <h3>Viewed Messages:</h3>
+        <ul id="viewedList"></ul>
+    </div>
+
+    <!-- Include jQuery library -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // ... Your existing JavaScript code ...
+    </script>
+</body>
+</html>
