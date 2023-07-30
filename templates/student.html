@@ -68,18 +68,42 @@
         {% for announcement in announcements %}
         <li>
             <div class="announcement-content">
-                <span>{{ announcement.teacher.name }}:</span> {{ announcement.message }}
+                <span>{{ announcement.teacher__name }}:</span>
+                <b>{{ announcement.message }}</b>
+                <i>{{announcement.timestamp}}</i>
             </div>
-            <span class="thumbs-up" onclick="toggleThumbsUp(this)"><i class="fas fa-thumbs-up"></i></span>
+            <span class="thumbs-up{% if announcement.notification__acknowledgement == 1 %} thumbs-up-clicked{% endif %}" onclick="toggleThumbsUp(this, {{announcement.notification__id}})"><i class="fas fa-thumbs-up"></i></span>
         </li>
         {% endfor %}
     </ul>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
     <script>
-        function toggleThumbsUp(element) {
-            // Toggle the class to change the color of the thumbs-up icon
-            element.classList.toggle('thumbs-up-clicked');
+        function toggleThumbsUp(element, notification_id) {
+            $.ajax({
+                type: 'GET',
+                url: '/toggleThumbsUp',
+                dataType: 'JSON',
+                data: {
+                    notification: notification_id
+                },
+                success: function(res) {
+                    if (res.success) {
+                        if (res.acknowledgement) {
+                            $(element).addClass('thumbs-up-clicked');
+                        } else {
+                            $(element).removeClass('thumbs-up-clicked');
+                        }
+                    }
+                }
+             })
         }
     </script>
+
+    <!-- Inside student_page.html and teacher_page.html -->
+<!-- Replace 'logout' with the URL name for your logout view -->
+<a href="{% url 'logout' %}">Logout</a>
 </body>
 </html>

@@ -1,8 +1,7 @@
 from django import forms
 from django.core.validators import validate_slug
 from django.contrib.auth.forms import AuthenticationForm
-from .models import User, Administrator, Student, Teacher
-from .models import Announcement
+from .models import User, Administrator, Student, Teacher, Announcement, Notification
 
 
 class LoginForm(AuthenticationForm):
@@ -32,7 +31,6 @@ class SignUpForm(forms.ModelForm):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password'])
         role = self.cleaned_data.get('role', '')
-        print('role=', role)
         if commit:
             user.save()
             if role == 'administrator':
@@ -61,4 +59,8 @@ class AnnouncementForm(forms.ModelForm):
         announcement.teacher = self.request.user.teacher
         if commit:
             announcement.save()
+            students = Student.objects.all()
+            for student in students:
+                notification = Notification(student=student, announcement=announcement)
+                notification.save()
         return announcement

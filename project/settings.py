@@ -41,8 +41,8 @@ INSTALLED_APPS = [
 ]
 
 AUTH_USER_MODEL = 'app1.User'
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
