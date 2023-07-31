@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Student Page</title>
+    <title>{{ student.name }} Student Page</title>
     <style>
         /* Internal CSS styles go here */
         body {
@@ -62,17 +62,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
-    <h2>Student Page</h2>
     <h3>Announcements:</h3>
-    <ul>
+    <ul id="announcementlist">
         {% for announcement in announcements %}
-        <li>
+        <li id="announcement{{ announcement.id }}">
             <div class="announcement-content">
                 <span>{{ announcement.teacher__name }}:</span>
                 <b>{{ announcement.message }}</b>
-                <i>{{announcement.timestamp}}</i>
+                <i>{{ announcement.timestamp }}</i>
             </div>
-            <span class="thumbs-up{% if announcement.notification__acknowledgement == 1 %} thumbs-up-clicked{% endif %}" onclick="toggleThumbsUp(this, {{announcement.notification__id}})"><i class="fas fa-thumbs-up"></i></span>
+            <span id="thumbsup{{ announcement.id }}" class="thumbs-up{% if announcement.notification__acknowledgement == 1 %} thumbs-up-clicked{% endif %}" onclick="toggleThumbsUp(this, {{announcement.notification__id}})"><i class="fas fa-thumbs-up"></i></span>
         </li>
         {% endfor %}
     </ul>

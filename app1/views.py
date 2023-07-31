@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from .forms import AnnouncementForm, LoginForm, SignUpForm
-from .models import Announcement
+from .models import Announcement, Notification
 
 
 def signup_page(request):
@@ -36,7 +36,6 @@ def login_page(request):
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             user = authenticate(request, username=username, password=password)
-            print('user=', user, user.__dict__)
             if user is not None:
                 login(request, user)
                 if hasattr(user, 'administrator'):
@@ -62,7 +61,7 @@ def administrator_page(request):
     if not hasattr(user, 'administrator'):
         raise PermissionError('not an administrator')
     announcements = Announcement.objects.all()
-    return render(request, 'administrator.html', {'announcements': announcements})
+    return render(request, 'administrator.html', {'announcements': announcements, 'administrator': user.administrator})
 
 
 @login_required
@@ -71,7 +70,7 @@ def student_page(request):
     if not hasattr(user, 'student'):
         raise PermissionError('not a student')
     announcements = Announcement.objects.filter(notification__student=user).values('message', 'timestamp', 'teacher__name', 'notification__id', 'notification__acknowledgement')
-    return render(request, 'student.html', {'announcements': announcements})
+    return render(request, 'student.html', {'announcements': announcements, 'student': user.student})
 
 
 @login_required
@@ -82,12 +81,13 @@ def teacher_page(request):
     if request.method == 'POST':
         form = AnnouncementForm(request.POST, request=request)
         if form.is_valid():
-            form.save()
-            return render(request, 'teacher_success.html')  # Render a success page or redirect as needed
-    else:
-        form = AnnouncementForm(request=request)
+            announcement = form.save()
+            return JsonResponse({'success': True, 'announcement': announcement.id})
+        return JsonResponse({'success': False})
 
-    return render(request, 'teacher.html', {'form': form})
+    form = AnnouncementForm(request=request)
+    data = fetch_data(request)
+    return render(request, 'teacher.html', {'form': form, 'teacher': user.teacher, 'announcements': data})
 
 
 def homepage(request):
@@ -111,24 +111,30 @@ def record_action(request):
     return JsonResponse({'success': False})
 
 
-def fetch_notifications(request):
-    notifications = Notification.objects.all()
+@login_required
+def fetch_data(request):
+    user = request.user
+    if not hasattr(user, 'teacher'):
+        raise PermissionError('not a teacher')
+    teacher = user.teacher
+
+    # Fetch announcements where the teacher is the currently logged-in user
+    announcements = Announcement.objects.filter(teacher=teacher).order_by('-timestamp')
+
+    # Fetch notifications where the announcement is from the teacher and acknowledgement is true
     data = []
-    for notification in notifications:
-        data.append({
-            'teacher_name': notification.teacher.name,
-            'message': notification.message,
-            'student_username': notification.student.username
-        })
-    return JsonResponse(data, safe=False)
 
-
-def fetch_viewed_messages(request):
-    if request.method == 'GET':
-        notifications = Notification.objects.all()
-
-        viewed_messages = []
+    for announcement in announcements:
+        print(announcement)
+        notifications = Notification.objects.filter(announcement=announcement, acknowledgement=True).order_by('student__name')
+        students = []
         for notification in notifications:
-            viewed_messages.append(f"{notification.student_username}: {notification.message}")
+            students.append({'id': notification.student.id, 'name': notification.student.name})
+        data.append({
+            'id': announcement.id,
+            'message': announcement.message,
+            'timestamp': announcement.timestamp,
+            'students': students,
+        })
 
-        return JsonResponse(viewed_messages, safe=False)
+    return data

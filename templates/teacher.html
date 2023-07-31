@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Teacher Page</title>
+    <title>{{ teacher.name }} Teacher Page</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -89,28 +89,62 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Post Announcement</button>
+        <button id="announcementSubmit" type="submit">Post Announcement</button>
     </form>
-
-    <!-- View List button -->
-    <button id="viewListBtn" onclick="showViewedList()">View List</button>
 
     <!-- Display notifications here -->
     <div id="notifications"></div>
 
     <!-- Viewed messages list -->
-    <div id="viewedListContainer" style="display: none;">
-        <h3>Viewed Messages:</h3>
-        <ul id="viewedList"></ul>
+    <div id="viewedListContainer">
+        <h3>Messages:</h3>
+        <ul id="viewedList">
+            {% for announcement in announcements %}
+            <li id="announcement-{{ announcement.id }}">
+                <div class="announcement-content">
+                    <b>{{ announcement.message }}</b>
+                    <i>{{ announcement.timestamp }}</i>
+                    <span class="thumbs-up thumbs-up-clicked"><i class="fas fa-thumbs-up">Acknowledged</i></span>
+                    <select class="student-name">
+                        {% for student in announcement.students %}
+                        <option id="option-{{ announcement.id }}-{{ student.id }}">{{ student.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
 
     <!-- Include jQuery library -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // ... Your existing JavaScript code ...
+        $('#announcementSubmit').on('click', function(e) {
+            e.preventDefault();
+            var url = '/teacher/'
+            var formMessage = $('#id_message');
+            var message = formMessage.val();
+            $.ajax({
+                type: 'POST',
+                url: url,
+                dataType: 'json',
+                headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                data: { message: message },
+                success: function(data) {
+                    if (data.success) {
+                        msg = '<p class="alert alert-success fade show">Success: Id = ' + data.announcement + '</p>'
+                    } else {
+                        msg = '<p class="alert alert-error fade show">Error</p>'
+                    }
+                    $('#notifications').html(msg).show();
+                    setTimeout(function() { $('#notifications').hide(); }, 5000);
+                },
+            });
+            formMessage.val('');
+        });
     </script>
     <!-- Inside student_page.html and teacher_page.html -->
 <!-- Replace 'logout' with the URL name for your logout view -->
-<a href="{% url 'logout' %}">Logout</a>
+<div><a href="{% url 'logout' %}">Logout</a></div>
 </body>
 </html>
