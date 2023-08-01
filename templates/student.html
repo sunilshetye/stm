@@ -2,6 +2,22 @@
 <html>
 <head>
     <title>{{ student.name }} Student Page</title>
+    <script>
+        const announcementSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/announcement/{{ student.username }}/'
+        );
+
+        announcementSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log(data);
+        };
+
+        announcementSocket.onclose = function(e) {
+            console.error('Announcement socket closed unexpectedly');
+        };
+
+
+    </script>
     <style>
         /* Internal CSS styles go here */
         body {

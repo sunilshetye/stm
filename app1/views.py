@@ -1,3 +1,4 @@
+from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -81,7 +82,23 @@ def teacher_page(request):
     if request.method == 'POST':
         form = AnnouncementForm(request.POST, request=request)
         if form.is_valid():
-            announcement = form.save()
+            (announcement, user_names) = form.save()
+            channel_layer = get_channel_layer()
+            message = announcement.message
+            send_message = {
+                'type': 'announcement.message',
+                'message': message
+            }
+            if channel_layer is not None:
+                print(f'message={message}, send_message={send_message}')
+                group_name = f'announcement_{user.username}'
+                print(f'group_name={group_name}')
+                channel_layer.group_send(group_name, send_message)
+                for user_name in user_names:
+                    group_name = f'announcement_{user_name}'
+                    print(f'group_name={group_name}')
+                    channel_layer.group_send(group_name, send_message)
+
             return JsonResponse({'success': True, 'announcement': announcement.id})
         return JsonResponse({'success': False})
 
@@ -125,7 +142,6 @@ def fetch_data(request):
     data = []
 
     for announcement in announcements:
-        print(announcement)
         notifications = Notification.objects.filter(announcement=announcement, acknowledgement=True).order_by('student__name')
         students = []
         for notification in notifications:

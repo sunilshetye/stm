@@ -13,17 +13,17 @@ class User(AbstractUser):
 
 class Administrator(User):
     def __str__(self):
-        return f"administrator: {self.username}: {self.name}"
+        return f'administrator: {self.username}: {self.name}'
 
 
 class Student(User):
     def __str__(self):
-        return f"student: {self.username}: {self.name}"
+        return f'student: {self.username}: {self.name}'
 
 
 class Teacher(User):
     def __str__(self):
-        return f"teacher: {self.username}: {self.name}"
+        return f'teacher: {self.username}: {self.name}'
 
 
 class Announcement(models.Model):
@@ -32,7 +32,7 @@ class Announcement(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"{self.teacher}: {self.message}"
+        return f'{self.teacher}: {self.message}'
 
 
 class Notification(models.Model):

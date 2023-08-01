@@ -24,7 +24,7 @@ class SignUpForm(forms.ModelForm):
         password = self.cleaned_data.get('password', '')
         confirm_password = self.cleaned_data.get('confirm_password', '')
         if password != confirm_password:
-            raise forms.ValidationError("Passwords do not match.")
+            raise forms.ValidationError('Passwords do not match.')
         return confirm_password
 
     def save(self, commit=True):
@@ -51,7 +51,7 @@ class AnnouncementForm(forms.ModelForm):
         fields = ['message']
 
     def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop("request")
+        self.request = kwargs.pop('request')
         super(AnnouncementForm, self).__init__(*args, **kwargs)
 
     def save(self, commit=True):
@@ -60,7 +60,9 @@ class AnnouncementForm(forms.ModelForm):
         if commit:
             announcement.save()
             students = Student.objects.all()
+            user_names = []
             for student in students:
                 notification = Notification(student=student, announcement=announcement)
                 notification.save()
-        return announcement
+                user_names.append(student.username)
+        return (announcement, user_names)

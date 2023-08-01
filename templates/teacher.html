@@ -2,6 +2,21 @@
 <html>
 <head>
     <title>{{ teacher.name }} Teacher Page</title>
+    <script>
+        const announcementSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/announcement/{{ teacher.username }}/'
+        );
+
+        announcementSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log(data);
+        };
+
+
+        announcementSocket.onclose = function(e) {
+            console.error('Announcement socket closed unexpectedly');
+        };
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -140,6 +155,7 @@
                     setTimeout(function() { $('#notifications').hide(); }, 5000);
                 },
             });
+
             formMessage.val('');
         });
     </script>
