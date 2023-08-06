@@ -1,3 +1,4 @@
+from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -84,20 +85,16 @@ def teacher_page(request):
         if form.is_valid():
             (announcement, user_names) = form.save()
             channel_layer = get_channel_layer()
-            message = announcement.message
             send_message = {
-                'type': 'announcement.message',
-                'message': message
+                'type': 'announcement_message',
+                'message': announcement.message
             }
             if channel_layer is not None:
-                print(f'message={message}, send_message={send_message}')
                 group_name = f'announcement_{user.username}'
-                print(f'group_name={group_name}')
-                channel_layer.group_send(group_name, send_message)
+                async_to_sync(channel_layer.group_send)(group_name, send_message)
                 for user_name in user_names:
                     group_name = f'announcement_{user_name}'
-                    print(f'group_name={group_name}')
-                    channel_layer.group_send(group_name, send_message)
+                    async_to_sync(channel_layer.group_send)(group_name, send_message)
 
             return JsonResponse({'success': True, 'announcement': announcement.id})
         return JsonResponse({'success': False})
