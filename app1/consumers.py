@@ -24,16 +24,52 @@ class AnnouncementConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
 
         # Send message to user group
-        message = text_data_json['message']
-        send_message = {
-            'type': 'announcement_message',
-            'message': message
-        }
+        message_type = text_data_json['message_type']
+        if message_type == 'announcement_add':
+            send_message = {
+                'message_type': text_data_json['message_type'],
+                'announcement': text_data_json['announcement'],
+                'announcement_teacher': text_data_json['announcement_teacher'],
+                'announcement_message': text_data_json['announcement_message'],
+                'announcement_timestamp': text_data_json['announcement_timestamp'],
+            }
+        elif message_type == 'acknowledgement':
+            send_message = {
+                'message_type': text_data_json['message_type'],
+                'announcement': text_data_json['announcement'],
+                'student': text_data_json['student'],
+                'student_name': text_data_json['student_name'],
+                'acknowledgement': text_data_json['acknowledgement'],
+            }
+        else:
+            send_message = {
+                'message_type': text_data_json['message_type'],
+            }
         await self.channel_layer.group_send(self.user_group_name, send_message)
 
     # Receive message from user group
     async def announcement_message(self, event):
-        message = event['message']
+        message_type = event['message_type']
+        if message_type == 'announcement_add':
+            send_message = {
+                'message_type': event['message_type'],
+                'announcement': event['announcement'],
+                'announcement_teacher': event['announcement_teacher'],
+                'announcement_message': event['announcement_message'],
+                'announcement_timestamp': event['announcement_timestamp'],
+            }
+        elif message_type == 'acknowledgement':
+            send_message = {
+                'message_type': event['message_type'],
+                'announcement': event['announcement'],
+                'student': event['student'],
+                'student_name': event['student_name'],
+                'acknowledgement': event['acknowledgement'],
+            }
+        else:
+            send_message = {
+                'message_type': event['message_type'],
+            }
 
         # Send message to WebSocket
-        await self.send(text_data=json.dumps({'message': message}))
+        await self.send(text_data=json.dumps(send_message))

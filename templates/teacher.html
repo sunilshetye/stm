@@ -2,21 +2,7 @@
 <html>
 <head>
     <title>{{ teacher.name }} Teacher Page</title>
-    <script>
-        const announcementSocket = new WebSocket(
-            'ws://' + window.location.host + '/ws/announcement/{{ teacher.username }}/'
-        );
-
-        announcementSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            console.log(data);
-        };
-
-
-        announcementSocket.onclose = function(e) {
-            console.error('Announcement socket closed unexpectedly');
-        };
-    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -97,7 +83,40 @@
             border-radius: 5px;
             margin-bottom: 5px;
         }
+
+        li {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        li:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .announcement-content {
+            flex-grow: 1;
+        }
+
+        .thumbs-up {
+            cursor: pointer;
+            color: #555;
+            transition: color 0.2s ease;
+        }
+
+        .thumbs-up-clicked {
+            color: #FFC107; /* Change the color to your desired one */
+        }
     </style>
+    <!-- Font Awesome Link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
     <h2>Teacher Page</h2>
@@ -119,21 +138,68 @@
                 <div class="announcement-content">
                     <b>{{ announcement.message }}</b>
                     <i>{{ announcement.timestamp }}</i>
-                    <span class="thumbs-up thumbs-up-clicked"><i class="fas fa-thumbs-up">Acknowledged</i></span>
-                    <select class="student-name">
-                        {% for student in announcement.students %}
-                        <option id="option-{{ announcement.id }}-{{ student.id }}">{{ student.name }}</option>
-                        {% endfor %}
-                    </select>
                 </div>
+                <span id="thumbsup-{{ announcement.id }}" class="thumbs-up{% if announcement.students %} thumbs-up-clicked{% endif %}"><i class="fas fa-thumbs-up"></i></span>
+                <select id="select-{{ announcement.id }}" class="student-name">
+                    {% for student in announcement.students %}
+                    <option id="option-{{ announcement.id }}-{{ student.id }}">{{ student.name }}</option>
+                    {% endfor %}
+                </select>
             </li>
             {% endfor %}
         </ul>
     </div>
 
-    <!-- Include jQuery library -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <div><a href="{% url 'logout' %}">Logout</a></div>
     <script>
+        const announcementSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/announcement/{{ teacher.username }}/'
+        );
+
+        announcementSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            switch(data.message_type) {
+                case 'announcement_add':
+                $('#viewedList').prepend(
+                    '<li id="announcement-' + data.announcement + '">' +
+                        '<div class="announcement-content">' +
+                            '<b>' + data.announcement_message + '</b> ' +
+                            '<i>' + data.announcement_timestamp + '</i> ' +
+                        '</div>' +
+                        '<span id="thumbsup-' + data.announcement + '" class="thumbs-up"><i class="fas fa-thumbs-up"></i></span> ' +
+                        '<select id="select-' + data.announcement + '" class="student-name">' +
+                        '</select>' +
+                    '</li>'
+                )
+                break;
+
+                case 'acknowledgement':
+                if (data.acknowledgement) {
+                    let element = $('#select-' + data.announcement);
+                    element.prepend(
+                        '<option id="option-' + data.announcement + '-' + data.student + '">' + data.student_name + '</option>'
+                    );
+                    if ($('#select-' + data.announcement + ' option').length == 1) {
+                        let element = $('#thumbsup-' + data.announcement);
+                        element.addClass('thumbs-up-clicked');
+                    }
+                } else {
+                    let element = $('#option-' + data.announcement + '-' + data.student);
+                    element.remove();
+                    if ($('#select-' + data.announcement + ' option').length == 0) {
+                        let element = $('#thumbsup-' + data.announcement);
+                        element.removeClass('thumbs-up-clicked');
+                    }
+                }
+                break;
+            }
+        };
+
+
+        announcementSocket.onclose = function(e) {
+            console.error('Announcement socket closed unexpectedly');
+        };
+
         $('#announcementSubmit').on('click', function(e) {
             e.preventDefault();
             var url = '/teacher/'
@@ -159,8 +225,5 @@
             formMessage.val('');
         });
     </script>
-    <!-- Inside student_page.html and teacher_page.html -->
-<!-- Replace 'logout' with the URL name for your logout view -->
-<div><a href="{% url 'logout' %}">Logout</a></div>
 </body>
 </html>

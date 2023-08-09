@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+from django.template import defaultfilters
 from django.utils import timezone
 from .forms import AnnouncementForm, LoginForm, SignUpForm
 from .models import Announcement, Notification
@@ -22,11 +23,31 @@ def signup_page(request):
 
 
 def toggle_acknowledgement(request):
-    id = request.GET['notification']
-    notification = Notification.objects.get(id=id)
+    user = request.user
+    if not hasattr(user, 'student'):
+        raise PermissionError('not a student')
+    student = user.student
+    id = request.GET['announcement']
+    announcement = Announcement.objects.get(id=id)
+    teacher = announcement.teacher
+    notification = Notification.objects.get(student=student, announcement=announcement)
     notification.acknowledgement = 1 if notification.acknowledgement == 0 else 0
     notification.timestamp = timezone.now()
     notification.save()
+    channel_layer = get_channel_layer()
+    send_message = {
+        'type': 'announcement_message',
+        'message_type': 'acknowledgement',
+        'announcement': announcement.id,
+        'student': student.id,
+        'student_name': student.name,
+        'acknowledgement': notification.acknowledgement,
+    }
+    if channel_layer is not None:
+        group_name = f'announcement_{student.username}'
+        async_to_sync(channel_layer.group_send)(group_name, send_message)
+        group_name = f'announcement_{teacher.username}'
+        async_to_sync(channel_layer.group_send)(group_name, send_message)
     return JsonResponse({'success': True,
                          'acknowledgement': notification.acknowledgement})
 
@@ -71,7 +92,7 @@ def student_page(request):
     user = request.user
     if not hasattr(user, 'student'):
         raise PermissionError('not a student')
-    announcements = Announcement.objects.filter(notification__student=user).values('message', 'timestamp', 'teacher__name', 'notification__id', 'notification__acknowledgement')
+    announcements = Announcement.objects.filter(notification__student=user).order_by('-timestamp').values('id', 'message', 'timestamp', 'teacher__name', 'notification__acknowledgement')
     return render(request, 'student.html', {'announcements': announcements, 'student': user.student})
 
 
@@ -85,9 +106,14 @@ def teacher_page(request):
         if form.is_valid():
             (announcement, user_names) = form.save()
             channel_layer = get_channel_layer()
+            timestamp = defaultfilters.date(timezone.localtime(announcement.timestamp), "M. j, Y, g:i a")
             send_message = {
                 'type': 'announcement_message',
-                'message': announcement.message
+                'message_type': 'announcement_add',
+                'announcement': announcement.id,
+                'announcement_teacher': announcement.teacher.name,
+                'announcement_message': announcement.message,
+                'announcement_timestamp': timestamp,
             }
             if channel_layer is not None:
                 group_name = f'announcement_{user.username}'
@@ -139,7 +165,7 @@ def fetch_data(request):
     data = []
 
     for announcement in announcements:
-        notifications = Notification.objects.filter(announcement=announcement, acknowledgement=True).order_by('student__name')
+        notifications = Notification.objects.filter(announcement=announcement, acknowledgement=True).order_by('-timestamp')
         students = []
         for notification in notifications:
             students.append({'id': notification.student.id, 'name': notification.student.name})

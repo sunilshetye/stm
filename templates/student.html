@@ -2,22 +2,7 @@
 <html>
 <head>
     <title>{{ student.name }} Student Page</title>
-    <script>
-        const announcementSocket = new WebSocket(
-            'ws://' + window.location.host + '/ws/announcement/{{ student.username }}/'
-        );
-
-        announcementSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            console.log(data);
-        };
-
-        announcementSocket.onclose = function(e) {
-            console.error('Announcement socket closed unexpectedly');
-        };
-
-
-    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         /* Internal CSS styles go here */
         body {
@@ -81,44 +66,65 @@
     <h3>Announcements:</h3>
     <ul id="announcementlist">
         {% for announcement in announcements %}
-        <li id="announcement{{ announcement.id }}">
+        <li id="announcement-{{ announcement.id }}">
             <div class="announcement-content">
                 <span>{{ announcement.teacher__name }}:</span>
                 <b>{{ announcement.message }}</b>
                 <i>{{ announcement.timestamp }}</i>
             </div>
-            <span id="thumbsup{{ announcement.id }}" class="thumbs-up{% if announcement.notification__acknowledgement == 1 %} thumbs-up-clicked{% endif %}" onclick="toggleThumbsUp(this, {{announcement.notification__id}})"><i class="fas fa-thumbs-up"></i></span>
+            <span id="thumbsup-{{ announcement.id }}" class="thumbs-up{% if announcement.notification__acknowledgement == 1 %} thumbs-up-clicked{% endif %}" onclick="toggleThumbsUp(this, {{announcement.id}})"><i class="fas fa-thumbs-up"></i></span>
         </li>
         {% endfor %}
     </ul>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-
+    <div><a href="{% url 'logout' %}">Logout</a></div>
     <script>
-        function toggleThumbsUp(element, notification_id) {
+        const announcementSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/announcement/{{ student.username }}/'
+        );
+
+        announcementSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            switch(data.message_type) {
+                case 'announcement_add':
+                $('#announcementlist').prepend(
+                    '<li id="announcement-' + data.announcement + '">' +
+                        '<div class="announcement-content">' +
+                            '<span>' + data.announcement_teacher + '</span> ' +
+                            '<b>' + data.announcement_message + '</b> ' +
+                            '<i>' + data.announcement_timestamp + '</i> ' +
+                        '</div>' +
+                        '<span id="thumbsup-' + data.announcement + '" class="thumbs-up" onclick="toggleThumbsUp(this, ' + data.announcement + ')"><i class="fas fa-thumbs-up"></i></span> ' +
+                    '</li>'
+                )
+                break;
+
+                case 'acknowledgement':
+                let element = $('#thumbsup-' + data.announcement);
+                if (data.acknowledgement) {
+                    element.addClass('thumbs-up-clicked');
+                } else {
+                    element.removeClass('thumbs-up-clicked');
+                }
+                break;
+            }
+        };
+
+        announcementSocket.onclose = function(e) {
+            console.error('Announcement socket closed unexpectedly');
+        };
+
+
+        function toggleThumbsUp(element, announcement) {
             $.ajax({
                 type: 'GET',
                 url: '/toggleThumbsUp',
                 dataType: 'JSON',
                 data: {
-                    notification: notification_id
-                },
-                success: function(res) {
-                    if (res.success) {
-                        if (res.acknowledgement) {
-                            $(element).addClass('thumbs-up-clicked');
-                        } else {
-                            $(element).removeClass('thumbs-up-clicked');
-                        }
-                    }
+                    announcement: announcement
                 }
              })
         }
     </script>
-
-    <!-- Inside student_page.html and teacher_page.html -->
-<!-- Replace 'logout' with the URL name for your logout view -->
-<a href="{% url 'logout' %}">Logout</a>
 </body>
 </html>

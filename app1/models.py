@@ -32,7 +32,7 @@ class Announcement(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f'{self.teacher}: {self.message}'
+        return f'{self.teacher}: {self.message}: {self.timestamp}'
 
 
 class Notification(models.Model):
