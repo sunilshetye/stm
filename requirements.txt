@@ -12,7 +12,7 @@ daphne==4.0.0
 Django==4.2.11
 flake8==6.0.0
 hyperlink==21.0.0
-idna==3.4
+idna==3.7
 incremental==22.10.0
 mccabe==0.7.0
 msgpack==1.0.5
