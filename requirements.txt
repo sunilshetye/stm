@@ -2,7 +2,7 @@ asgiref==3.7.2
 async-timeout==4.0.2
 attrs==23.1.0
 autobahn==23.6.2
-Automat==22.10.0
+Automat==24.8.1
 cffi==1.15.1
 channels==4.0.0
 channels-redis==4.1.0
@@ -13,7 +13,7 @@ Django==4.2.18
 flake8==7.1.1
 hyperlink==21.0.0
 idna==3.7
-incremental==22.10.0
+incremental==24.7.2
 mccabe==0.7.0
 msgpack==1.0.5
 pyasn1==0.5.0
@@ -26,7 +26,7 @@ redis==4.6.0
 service-identity==23.1.0
 six==1.16.0
 sqlparse==0.5.3
-Twisted==23.10.0
+Twisted==24.11.0
 txaio==23.1.1
 typing_extensions==4.12.2
 zope.interface==6.0
